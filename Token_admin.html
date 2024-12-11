@@ -1,0 +1,207 @@
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Token Admin</title>
+        <script src="https://cdn.tailwindcss.com"></script>        
+    </head>
+    <body class="bg-gray-100 font-sans">
+        <div class="container mx-auto p-6">
+
+            <h1 class="text-4xl font-bold text-center text-gray-800 mb-6">Token Admin</h1>
+            <div class="text-center">
+              <button id="btnConnect" class="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600 transition">Conectar wallet</button>
+              <button id="btnDisconnect" class="bg-red-500 text-white px-6 py-2 rounded-md hover:bg-red-600 transition mt-4" style="display:none;">Desconectar</button>
+            </div>
+            <p id="status" class="text-center text-gray-600 mt-4">Estado: Desconectado</p>
+            
+            <!-- Mostrar balances en wallet de los tokens A y B -->
+            <p id="tokenA_Balance" style="display: none;" class="text-center text-xl text-gray-800 mt-6">Balance en wallet del Token A: 0</p>
+            <p id="tokenB_Balance"  style="display: none;" class="text-center text-xl text-gray-800 mt-6">Balance en wallet del Token B: 0</p>
+
+            <!-- Formulario comun -->
+            <div id="formComun" style="display:none;" class="bg-white p-6 rounded-lg shadow-md mt-6">
+              <label for="tokenApprove" class="block text-gray-1000 font-bold">Token Approve</label>
+              <input type="text" id="approveValueA" placeholder="Cantidad a aprobar del token A (wei)" class="w-full mt-2 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <input type="text" id="approveValueB" placeholder="Cantidad a aprobar del token B (wei)" class="w-full mt-2 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <button id="fnAprobarSpender" class="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600 transition mt-4">Aprobar contrato DEX</button>
+            </div> 
+
+            <!-- Formulario para el Owner -->
+            <div id="formOwner" style="display:none;" class="bg-white p-6 rounded-lg shadow-md mt-6">
+              <h2 class="text-2xl font-semibold text-gray-800 mb-4">Bienvenido Owner</h2>
+              <label for="tokenAMint" class="block text-gray-1000 font-bold">Token Mint</label>
+              <input type="text" id="toAddressA" placeholder="Address destinatario" class="w-full mt-2 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <input type="text" id="mintCantidadA" placeholder="Cantidad a mintear del token A (wei)" class="w-full mt-2 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <button id="fnMintTokenA" class="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600 transition mt-4">Mint Token A</button>
+              <br>
+              <br>
+              <label for="tokenBMint" class="block text-gray-1000 font-bold">Token Mint</label>
+              <input type="text" id="toAddressB" placeholder="Address destinatario" class="w-full mt-2 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <input type="text" id="mintCantidadB" placeholder="Cantidad a mintear del token B (wei)" class="w-full mt-2 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <button id="fnMintTokenB" class="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600 transition mt-4">Mint Token B</button>
+            </div> 
+
+        </div>
+
+        <script src="./ABIs.js"></script>
+
+        <script type="module">
+          import { ethers } from "https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.min.js";
+
+          let provider, signer, address, contract_DEX, contract_TokenA, contract_TokenB, balanceTokenA, balanceTokenB;
+
+          const DEX_ADDRESS = "0x4610800308EdE872EB77498cDd168416f5330770";
+          const TokenA_ADDRESS = "0x1453741502bbda3ae402ee98a47644cf6fc357b2";
+          const TokenB_ADDRESS = "0x9662d6eed60abb4a9ac2be163603769c07b9867b";
+
+          async function connectWallet() {
+
+            if(window.ethereum) {
+              console.log('Metamask detected');
+
+              await window.ethereum.request({ method: 'eth_requestAccounts' });
+              provider = new ethers.BrowserProvider(window.ethereum);
+              signer = await provider.getSigner();
+              address = await signer.getAddress();
+
+              contract_DEX = new ethers.Contract(DEX_ADDRESS, ABI_DEX, signer);
+              contract_TokenA = new ethers.Contract(TokenA_ADDRESS, ABI_TokenA, signer);
+              contract_TokenB = new ethers.Contract(TokenB_ADDRESS, ABI_TokenB, signer);
+
+              const owner = await (contract_DEX.owner())
+
+              balanceTokenA = await contract_TokenA.balanceOf(address);
+              balanceTokenB = await contract_TokenB.balanceOf(address);
+
+              document.getElementById('tokenA_Balance').style.display = 'block';
+              document.getElementById('tokenB_Balance').style.display = 'block';
+
+              document.getElementById('tokenA_Balance').innerText = `Balance en wallet del Token A: ${ethers.formatEther(balanceTokenA)}`;
+              document.getElementById('tokenB_Balance').innerText = `Balance en wallet del Token B: ${ethers.formatEther(balanceTokenB)}`;
+
+              document.getElementById('btnConnect').style.display = 'none';
+              document.getElementById('btnDisconnect').style.display = 'inline';
+              document.getElementById('status').innerText = `Estado: Conectado a la cuenta ${address}`;
+
+              if (owner==address) {
+                
+                document.getElementById('formComun').style.display = 'block';
+                document.getElementById('formOwner').style.display = 'block';
+
+/*                 let saldoTokenA = await contract_DEX.saldoTokenA();
+                let saldoTokenB = await contract_DEX.saldoTokenB();
+
+                document.getElementById('saldoTokenA').style.display = 'block';
+                document.getElementById('saldoTokenB').style.display = 'block';
+                document.getElementById('saldoTokenA').innerText = `Saldo en DEX del Token A: ${ethers.formatEther(saldoTokenA)}`;
+                document.getElementById('saldoTokenB').innerText = `Saldo en DEX del Token B: ${ethers.formatEther(saldoTokenB)}`;
+                
+                try {
+                  let precioTokenA = await contract_DEX.getPrice(TokenA_ADDRESS);
+                  let precioTokenB = await contract_DEX.getPrice(TokenB_ADDRESS);
+
+                  document.getElementById('precioTokenA').style.display = 'block';
+                  document.getElementById('precioTokenB').style.display = 'block';
+                  document.getElementById('precioTokenA').innerText = `Precio en DEX del Token A: ${precioTokenA}`;
+                  document.getElementById('precioTokenB').innerText = `Precio en DEX del Token B: ${precioTokenB}`;
+                } catch (err) {
+                  document.getElementById('precioTokenA').style.display = 'block';
+                  document.getElementById('precioTokenA').innerText = `No se pueden calcular precios`;
+                  alert(err['message'].split('(')[0]);
+                }
+ */
+              } else {
+
+                document.getElementById('formComun').style.display = 'block';
+                document.getElementById('formOtros').style.display = 'block';
+
+              }
+//              const decimals = await contract.decimals();
+//              const tokenBalance = await contract.balanceOf(address);
+//              const formattedTokenBalance = ethers.formatUnits(tokenBalance, decimals);
+
+            }
+            else {
+              console.error('Metamask not detected');
+            }
+          }
+
+          async function disconnectWallet() {
+            provider = null;
+            signer = null;
+            address = null;
+
+            document.getElementById('status').innerText = "Estado: Desconectado";
+            document.getElementById('btnConnect').style.display = 'inline';
+            document.getElementById('btnDisconnect').style.display = 'none';   
+
+            document.getElementById('tokenA_Balance').style.display = 'none';
+            document.getElementById('tokenB_Balance').style.display = 'none';                              
+
+            document.getElementById('formComun').style.display = 'none';
+            document.getElementById('formOwner').style.display = 'none';
+            document.getElementById('formOtros').style.display = 'none';   
+          }
+
+
+          async function aprobarSpender() {
+
+            let tokenA = document.getElementById('approveValueA').value;
+//            let tokenA_wei = tokenA * (10**18);
+            let tokenB = document.getElementById('approveValueB').value;
+//            let tokenB_wei = tokenB * (10**18);
+ 
+            try {
+              const aprobarTokenA = await contract_TokenA.approve(DEX_ADDRESS, tokenA);
+              await aprobarTokenA.wait()
+              alert (`${tokenA} tokens A aprobados en DEX para wallet ${address}`);
+            } catch (err) {
+                alert(err['message'].split('(')[0]);
+            }
+
+            try {
+              const aprobarTokenB = await contract_TokenB.approve(DEX_ADDRESS, tokenB);
+              await aprobarTokenB.wait()
+              alert (`${tokenB} tokens B aprobados en DEX para wallet ${address}`);
+            } catch (err) {
+                alert(err['message'].split('(')[0]);
+            }
+
+          }
+
+          async function mintTokenA() {
+
+            let toAddressA = document.getElementById('toAddressA').value;
+            let mintCantidadA = document.getElementById('mintCantidadA').value;
+
+            try {
+              const mintToken = await contract_TokenA.mint(toAddressA, mintCantidadA);
+            } catch (err) {
+                alert(err['message'].split('(')[0]);
+            }
+          }
+
+
+          async function mintTokenB() {
+
+            let toAddressB = document.getElementById('toAddressB').value;
+            let mintCantidadB = document.getElementById('mintCantidadB').value;
+
+            try {
+              const mintToken = await contract_TokenB.mint(toAddressB, mintCantidadB);
+            } catch (err) {
+                alert(err['message'].split('(')[0]);
+            }
+          }
+
+          document.getElementById('btnConnect').addEventListener('click', connectWallet);
+          document.getElementById('btnDisconnect').addEventListener('click', disconnectWallet);
+          document.getElementById('fnAprobarSpender').addEventListener('click', aprobarSpender);
+          document.getElementById('fnMintTokenA').addEventListener('click', mintTokenA);
+          document.getElementById('fnMintTokenB').addEventListener('click', mintTokenB);
+
+        </script>
+
+    </body>
+</html>
