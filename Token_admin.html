@@ -12,15 +12,20 @@
             <div class="text-center">
               <button id="btnConnect" class="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600 transition">Conectar wallet</button>
               <button id="btnDisconnect" class="bg-red-500 text-white px-6 py-2 rounded-md hover:bg-red-600 transition mt-4" style="display:none;">Desconectar</button>
+              <button id="btnRefresh" class="bg-green-500 text-white px-6 py-2 rounded-md hover:bg-green-600 transition mt-4" style="display:none;">Refrescar</button>
             </div>
             <p id="status" class="text-center text-gray-600 mt-4">Estado: Desconectado</p>
             
             <!-- Mostrar balances en wallet de los tokens A y B -->
             <p id="tokenA_Balance" style="display: none;" class="text-center text-xl text-gray-800 mt-6">Balance en wallet del Token A: 0</p>
-            <p id="tokenB_Balance"  style="display: none;" class="text-center text-xl text-gray-800 mt-6">Balance en wallet del Token B: 0</p>
+            <p id="tokenB_Balance" style="display: none;" class="text-center text-xl text-gray-800 mt-6">Balance en wallet del Token B: 0</p>
 
             <!-- Formulario comun -->
             <div id="formComun" style="display:none;" class="bg-white p-6 rounded-lg shadow-md mt-6">
+              <p id="tokenA_Allowance" style="display: none;" class="text-l text-gray-800 mt-6">Allowance del Token A en DEX: 0</p>
+              <p id="tokenB_Allowance" style="display: none;" class="text-l text-gray-800 mt-6">Allowance del Token B en DEX: 0</p>
+              <br>
+              <br>
               <label for="tokenApprove" class="block text-gray-1000 font-bold">Token Approve</label>
               <input type="text" id="approveValueA" placeholder="Cantidad a aprobar del token A (wei)" class="w-full mt-2 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
               <input type="text" id="approveValueB" placeholder="Cantidad a aprobar del token B (wei)" class="w-full mt-2 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -49,11 +54,13 @@
         <script type="module">
           import { ethers } from "https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.min.js";
 
-          let provider, signer, address, contract_DEX, contract_TokenA, contract_TokenB, balanceTokenA, balanceTokenB;
+          let provider, signer, address, contract_DEX, contract_TokenA, contract_TokenB, balanceTokenA, balanceTokenB, allowanceTokenA, allowanceTokenB;
 
           const DEX_ADDRESS = "0x4610800308EdE872EB77498cDd168416f5330770";
           const TokenA_ADDRESS = "0x1453741502bbda3ae402ee98a47644cf6fc357b2";
           const TokenB_ADDRESS = "0x9662d6eed60abb4a9ac2be163603769c07b9867b";
+
+// FUNCIONES
 
           async function connectWallet() {
 
@@ -82,16 +89,19 @@
 
               document.getElementById('btnConnect').style.display = 'none';
               document.getElementById('btnDisconnect').style.display = 'inline';
+              document.getElementById('btnRefresh').style.display = 'inline';
               document.getElementById('status').innerText = `Estado: Conectado a la cuenta ${address}`;
+
+              document.getElementById('formComun').style.display = 'block';
+
+              getAllowance();
 
               if (owner==address) {
                 
-                document.getElementById('formComun').style.display = 'block';
                 document.getElementById('formOwner').style.display = 'block';
 
               } else {
 
-                document.getElementById('formComun').style.display = 'block';
                 document.getElementById('formOtros').style.display = 'block';
 
               }
@@ -109,6 +119,7 @@
             document.getElementById('status').innerText = "Estado: Desconectado";
             document.getElementById('btnConnect').style.display = 'inline';
             document.getElementById('btnDisconnect').style.display = 'none';   
+            document.getElementById('btnRefresh').style.display = 'none';   
 
             document.getElementById('tokenA_Balance').style.display = 'none';
             document.getElementById('tokenB_Balance').style.display = 'none';                              
@@ -118,6 +129,18 @@
             document.getElementById('formOtros').style.display = 'none';   
           }
 
+
+          async function getAllowance() {
+
+              allowanceTokenA = await contract_TokenA.allowance(address, DEX_ADDRESS);
+              allowanceTokenB = await contract_TokenB.allowance(address, DEX_ADDRESS);
+
+              document.getElementById('tokenA_Allowance').style.display = 'block';
+              document.getElementById('tokenB_Allowance').style.display = 'block';
+              document.getElementById('tokenA_Allowance').innerText = `Allowance del Token A en DEX para wallet ${address} : ${ethers.formatEther(allowanceTokenA)}`;
+              document.getElementById('tokenB_Allowance').innerText = `Allowance del Token B en DEX para wallet ${address} : ${ethers.formatEther(allowanceTokenB)}`;
+            
+          }
 
           async function aprobarSpender() {
 
@@ -204,8 +227,11 @@
             }
           }
 
+// LISTENERS
+
           document.getElementById('btnConnect').addEventListener('click', connectWallet);
           document.getElementById('btnDisconnect').addEventListener('click', disconnectWallet);
+          document.getElementById('btnRefresh').addEventListener('click', getAllowance);
           document.getElementById('fnAprobarSpender').addEventListener('click', aprobarSpender);
           document.getElementById('fnMintTokenA').addEventListener('click', mintTokenA);
           document.getElementById('fnMintTokenB').addEventListener('click', mintTokenB);
