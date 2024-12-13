@@ -95,10 +95,6 @@
                 document.getElementById('formOtros').style.display = 'block';
 
               }
-//              const decimals = await contract.decimals();
-//              const tokenBalance = await contract.balanceOf(address);
-//              const formattedTokenBalance = ethers.formatUnits(tokenBalance, decimals);
-
             }
             else {
               console.error('Metamask not detected');
@@ -126,22 +122,29 @@
           async function aprobarSpender() {
 
             let tokenA = document.getElementById('approveValueA').value;
-//            let tokenA_wei = tokenA * (10**18);
             let tokenB = document.getElementById('approveValueB').value;
-//            let tokenB_wei = tokenB * (10**18);
- 
+
+            if((isNaN(tokenA) || tokenA < 0) || (isNaN(tokenB) || tokenB < 0) || ((tokenA == 0) && (tokenB == 0))) {
+              alert('Revisar cantidades...');
+              return;
+            }
+
             try {
               const aprobarTokenA = await contract_TokenA.approve(DEX_ADDRESS, tokenA);
+
               await aprobarTokenA.wait()
               alert (`${tokenA} tokens A aprobados en DEX para wallet ${address}`);
+
             } catch (err) {
                 alert(err['message'].split('(')[0]);
             }
 
             try {
               const aprobarTokenB = await contract_TokenB.approve(DEX_ADDRESS, tokenB);
+
               await aprobarTokenB.wait()
               alert (`${tokenB} tokens B aprobados en DEX para wallet ${address}`);
+
             } catch (err) {
                 alert(err['message'].split('(')[0]);
             }
@@ -153,8 +156,22 @@
             let toAddressA = document.getElementById('toAddressA').value;
             let mintCantidadA = document.getElementById('mintCantidadA').value;
 
+            if(!ethers.isAddress(toAddressA)) {
+              alert('Dirección de destinatario inválida');
+              return;
+            }
+
+            if(isNaN(mintCantidadA) || mintCantidadA <= 0) {
+              alert('Monto inválido');
+              return;
+            }
+
             try {
               const mintToken = await contract_TokenA.mint(toAddressA, mintCantidadA);
+
+              await mintToken.wait();
+              alert (`${mintCantidadA} tokens A minteados para wallet ${toAddressA}`);
+
             } catch (err) {
                 alert(err['message'].split('(')[0]);
             }
@@ -166,8 +183,22 @@
             let toAddressB = document.getElementById('toAddressB').value;
             let mintCantidadB = document.getElementById('mintCantidadB').value;
 
+            if(!ethers.isAddress(toAddressB)) {
+              alert('Dirección de destinatario inválida');
+              return;
+            }
+
+            if(isNaN(mintCantidadB) || mintCantidadB <= 0) {
+              alert('Monto inválido');
+              return;
+            }
+
             try {
               const mintToken = await contract_TokenB.mint(toAddressB, mintCantidadB);
+
+              await mintToken.wait();
+              alert (`${mintCantidadB} tokens B minteados para wallet ${toAddressB}`);
+
             } catch (err) {
                 alert(err['message'].split('(')[0]);
             }

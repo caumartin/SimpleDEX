@@ -118,11 +118,6 @@
                 traerPrecioDEX();
 
               }
-
-//              const decimals = await contract.decimals();
-//              const tokenBalance = await contract.balanceOf(address);
-//              const formattedTokenBalance = ethers.formatUnits(tokenBalance, decimals);
-
             }
             else {
               console.error('Metamask not detected');
@@ -172,7 +167,9 @@
                   document.getElementById('precioTokenB').style.display = 'block';
                   document.getElementById('precioTokenA').innerText = `Precio en DEX del Token A: ${parseFloat(precioTokenA)/10000}`;
                   document.getElementById('precioTokenB').innerText = `Precio en DEX del Token B: ${parseFloat(precioTokenB)/10000}`;
+
                 } catch (err) {
+
                   document.getElementById('precioTokenA').style.display = 'block';
                   document.getElementById('precioTokenA').innerText = `No se pueden calcular precios`;
                   alert(err['message'].split('(')[0]);
@@ -307,21 +304,6 @@
           document.getElementById('fnQuitarLiquidez').addEventListener('click', quitarLiquidez);
           document.getElementById('fnSwapAxB').addEventListener('click', swapAxB);
           document.getElementById('fnSwapBxA').addEventListener('click', swapBxA);
-
-
-/*
-            if(!ethers.isAddress(recipientAddress)) {
-              alert('Dirección de destinatario inválida');
-              return;
-            }
-
-            if(isNaN(amount) || amount <= 0) {
-              alert('Monto inválido');
-              return;
-            }
-
- */
-
 
         </script>
 
