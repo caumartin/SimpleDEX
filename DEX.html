@@ -202,13 +202,18 @@
 
             let addTokenA = document.getElementById('agregarTokenA').value;
             let addTokenB = document.getElementById('agregarTokenB').value;
+
+            if ((isNaN(addTokenA) || addTokenA < 0) || (isNaN(addTokenB) || addTokenB < 0) || (addTokenA==0 && addTokenB==0)) {
+              alert('Revisar cantidades...');
+              return;
+            }
  
             try {
               const agregarLiquidez = await contract_DEX.addLiquidity(addTokenA, addTokenB);
 
               await agregarLiquidez.wait();
 
-              alert("Operacion exitosa")
+              alert("Operacion exitosa");
 
             } catch (err) {
                 alert(err['message'].split('(')[0]);
@@ -221,12 +226,17 @@
             let rmTokenA = document.getElementById('quitarTokenA').value;
             let rmTokenB = document.getElementById('quitarTokenA').value;
 
+            if ((isNaN(rmTokenA) || rmTokenA < 0) || (isNaN(rmTokenB) || rmTokenB < 0) || (rmTokenA==0 && rmTokenB==0)) {
+              alert('Revisar cantidades...');
+              return;
+            }
+
             try {
               const quitarLiquidez = await contract_DEX.removeLiquidity(rmTokenA, rmTokenB);
 
               await quitarLiquidez.wait();
 
-              alert("Operacion exitosa")
+              alert("Operacion exitosa");
 
             } catch (err) {
                 alert(err['message'].split('(')[0]);
@@ -239,10 +249,16 @@
 
             let swapTokenA = document.getElementById('cantidadTokenA').value;
 
+            if (isNaN(swapTokenA) || swapTokenA <= 0) {
+              alert('Monto inválido');
+              return;
+            }
+
             try {
               const cambiarAxB = await contract_DEX.swapAforB(swapTokenA);
 
-//              await cambiarAxB.wait();
+              await cambiarAxB.wait();
+              alert("Operacion exitosa");
 
             } catch (err) {
                 alert(err['message'].split('(')[0]);
@@ -255,10 +271,16 @@
 
             let swapTokenB = document.getElementById('cantidadTokenB').value;
 
+            if (isNaN(swapTokenB) || swapTokenB <= 0) {
+              alert('Monto inválido');
+              return;
+            }
+
             try {
               const cambiarBxA = await contract_DEX.swapBforA(swapTokenB);
 
-//              await cambiarBxA.wait();
+              await cambiarBxA.wait();
+              alert("Operacion exitosa");
 
             } catch (err) {
                 alert(err['message'].split('(')[0]);
@@ -287,10 +309,7 @@
           document.getElementById('fnSwapBxA').addEventListener('click', swapBxA);
 
 
-/*           async function sendETH() {
-            const recipientAddress = document.getElementById('ethRecipientAddress').value;
-            const amount = document.getElementById('ethAmount').value;
-
+/*
             if(!ethers.isAddress(recipientAddress)) {
               alert('Dirección de destinatario inválida');
               return;
@@ -301,60 +320,6 @@
               return;
             }
 
-            try {
-              const tx = {
-                to: recipientAddress,
-                value: ethers.parseEther(amount)
-              };
-
-              const txResponse = await signer.sendTransaction(tx);
-
-              await txResponse.wait();
-
-              console.log("🚀 ~ sendETH ~ txResponse", txResponse)
-              alert(`Transacción enviada con éxito: ${txResponse.hash}`);
-
-            } catch (error) {
-              console.error('Error sending ETH', error);
-              alert('Error enviando ETH');
-            }
-
-          }
-
-          async function sendToken() {
-            const recipientAddress = document.getElementById('recipientAddress').value;
-            const amount = document.getElementById('tokenAmount').value;
-
-
-            if (!ethers.isAddress(recipientAddress)) {
-              alert("Dirección inválida.");
-              return;
-            }
-
-            if (isNaN(amount) || amount <= 0) {
-              alert("Monto inválido.");
-              return;
-            }
-            
-            try {
-              const decimals = await contract.decimals();
-              const amountToSend = ethers.parseUnits(amount, decimals);
-
-              const txApproval = await contract.approve(recipientAddress, amountToSend);
-              await txApproval.wait();
-
-              const tx = await contract.transfer(recipientAddress, amountToSend);
-
-              await tx.wait();
-
-              console.log("🚀 ~ sendToken ~ tx", tx)
-              alert(`Transacción enviada con éxito: ${tx.hash}`);
-
-            } catch (error) {
-              console.error('Error sending ERC20', error);
-              alert('Error enviando ERC20');
-            }
-          }
  */
 
 
